@@ -4,9 +4,11 @@ stages:
 fetch_sports_schedule:
   stage: fetch
   image: python:3.11-slim
+  rules:
+    # Only execute this job if triggered by a scheduled pipeline
+    - if: $CI_PIPELINE_SOURCE == "schedule"
   before_script:
-    # Upgrade pip and install standard dependencies
-     piety- - pip install --no-cache-dir --upgrade pip
+    - pip install --no-cache-dir --upgrade pip
     - pip install -r requirements.txt
   script:
     - python fetch_schedule.py
@@ -14,4 +16,4 @@ fetch_sports_schedule:
     name: "sports-schedule-$CI_COMMIT_SHORT_SHA"
     paths:
       - sports_schedule.json
-    expire_in: 1 week
+    expire_in: 7 days
