@@ -16,36 +16,36 @@ def fetch_schedules():
         print("Please configure this variable in your GitHub Repository Settings > Secrets > Actions.")
         sys.exit(1)
 
-    # 2. Corrected endpoints explicitly routing through the RapidAPI domain network
+    # 2. Endpoints explicitly routing through the RapidAPI domain network
     sports_config = {
         "mlb": {
             "url": "https://rapidapi.com",
-            "host": "://rapidapi.com",
+            "host": "api-baseball.p.rapidapi.com",
             "params": {}
         },
         "nfl": {
             "url": "https://rapidapi.com",
-            "host": "://rapidapi.com",
+            "host": "api-american-football.p.rapidapi.com",
             "params": {}
         },
         "nba": {
             "url": "https://rapidapi.com",
-            "host": "://rapidapi.com",
+            "host": "api-basketball.p.rapidapi.com",
             "params": {"league": "12"}
         },
         "wnba": {
             "url": "https://rapidapi.com",
-            "host": "://rapidapi.com",
+            "host": "api-basketball.p.rapidapi.com",
             "params": {"league": "13"}
         },
         "soccer": {
             "url": "https://rapidapi.com",
-            "host": "://rapidapi.com",
+            "host": "api-football-v1.p.rapidapi.com",
             "params": {}
         },
         "tennis": {
             "url": "https://rapidapi.com",
-            "host": "://rapidapi.com",
+            "host": "api-tennis.p.rapidapi.com",
             "params": {}
         }
     }
@@ -64,9 +64,12 @@ def fetch_schedules():
     for sport_name, config in sports_config.items():
         print(f"Fetching data for: {sport_name.upper()}...")
         
+        # FIXED: Added 'accept' and 'Content-Type' headers to block raw HTML error drops
         headers = {
             "x-rapidapi-key": api_key,
-            "x-rapidapi-host": config["host"]
+            "x-rapidapi-host": config["host"],
+            "accept": "application/json",
+            "Content-Type": "application/json"
         }
         
         query_params = {
@@ -78,8 +81,14 @@ def fetch_schedules():
         try:
             response = requests.get(config["url"], headers=headers, params=query_params, timeout=15)
             
+            # Catch plain text subscription block sheets from RapidAPI early
+            if "content-type" in response.headers and "text/html" in response.headers["content-type"]:
+                print(f"  -> Subscription Error: RapidAPI refused connection. Your account is likely not subscribed to the {sport_name.upper()} API.")
+                master_schedule["sports"][sport_name] = {"error": "Not subscribed on RapidAPI profile", "games": []}
+                continue
+
             if response.status_code != 200:
-                print(f"  -> HTTP Error {response.status_code} for {sport_name.upper()}. Check subscription plan.")
+                print(f"  -> HTTP Error {response.status_code} for {sport_name.upper()}. Check plan limits.")
                 master_schedule["sports"][sport_name] = {"error": f"HTTP {response.status_code}", "games": []}
                 continue
                 
@@ -99,8 +108,8 @@ def fetch_schedules():
             }
 
         except ValueError:
-            print(f"  -> JSON Parsing failed for {sport_name.upper()}. Endpoint returned plain text or raw HTML.")
-            master_schedule["sports"][sport_name] = {"error": "Invalid JSON response from server", "games": []}
+            print(f"  -> JSON Parsing failed for {sport_name.upper()}. Endpoint returned text data.")
+            master_schedule["sports"][sport_name] = {"error": "Invalid payload body layout", "games": []}
         except requests.exceptions.RequestException as e:
             print(f"  -> Connection failed for {sport_name.upper()}: {e}")
             master_schedule["sports"][sport_name] = {"error": str(e), "games": []}
@@ -110,7 +119,7 @@ def fetch_schedules():
     try:
         with open(output_filename, "w", encoding="utf-8") as f:
             json.dump(master_schedule, f, indent=4, ensure_ascii=False)
-        print(f"\nFinal workflow success: All data consolidated into '{output_filename}'.")
+        print(f"\nFinal workflow success: All available data consolidated into '{output_filename}'.")
     except IOError as e:
         print(f"Error writing output file: {e}")
         sys.exit(1)
