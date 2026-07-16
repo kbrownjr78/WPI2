@@ -1,38 +1,53 @@
-name: Daily Sports Schedule Pull
+name: Daily Sports Predictive Model Sync
 
 on:
   schedule:
-    # Triggers automatically at 06:00 UTC (2:00 AM EST) every day
+    # Triggers automatically at 06:00 UTC every day
     - cron: '0 6 * * *'
   workflow_dispatch:
     # Enables the manual "Run workflow" button in the GitHub Actions UI
 
+# Give the workflow explicit write permissions to commit data updates back to the repository
+permissions:
+  contents: write
+
 jobs:
-  fetch-sports:
+  run-analytical-pipeline:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repository code
       uses: actions/checkout@v4
+      with:
+        persist-credentials: true # Keeps your GitHub Actions token active for git push tasks
 
     - name: Set up Python environment
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-        cache: 'pip' # Speeds up execution by caching installed dependencies
+        cache: 'pip'
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install requests==2.32.3
 
-    - name: Execute Resilient Sports Sync
-      # Runs the main script which has the built-in fault protection system
+    - name: Run Macro Win Probability Engine
+      # Executes the script which calculates the math layers and outputs data files
       run: python fetch_schedule.py
 
-    - name: Save schedule as a workflow artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: sports-schedule
-        path: sports_schedule.json
-        retention-days: 7
+    - name: Commit and Push Analytical Outputs
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@://github.com"
+        
+        # UPDATED: Stage both the master JSON data array and the new CSV spreadsheet summary
+        git add sports_schedule.json predictions_summary.csv
+        
+        # Commit only if files inside the staging index changed
+        if git diff --staged --quiet; then
+          echo "No predictive analytical deltas detected. Skipping commit operations."
+        else
+          git commit -m "data: model update for JSON database and CSV summary [skip ci]"
+          git push origin HEAD:${{ github.ref }}
+        fi
