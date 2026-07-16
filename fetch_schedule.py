@@ -6,7 +6,7 @@ import requests
 
 def fetch_schedules():
     """
-    Loops through the correct mixed endpoints to aggregate daily schedules
+    Loops through the correct RapidAPI proxy endpoints to aggregate daily schedules
     for MLB, NFL, NBA, WNBA, Soccer, and Tennis into a single JSON artifact.
     """
     # 1. Securely retrieve the API key from GitHub Secrets
@@ -16,36 +16,36 @@ def fetch_schedules():
         print("Please configure this variable in your GitHub Repository Settings > Secrets > Actions.")
         sys.exit(1)
 
-    # 2. Corrected endpoints balancing Direct Dashboard and RapidAPI structures
+    # 2. Corrected endpoints explicitly routing through the RapidAPI domain network
     sports_config = {
         "mlb": {
-            "url": "https://api-sports.io",
-            "host": "v1.baseball.api-sports.io",
+            "url": "https://rapidapi.com",
+            "host": "://rapidapi.com",
             "params": {}
         },
         "nfl": {
-            "url": "https://api-sports.io",
-            "host": "v1.american-football.api-sports.io",
+            "url": "https://rapidapi.com",
+            "host": "://rapidapi.com",
             "params": {}
         },
         "nba": {
-            "url": "https://api-sports.io",
-            "host": "v1.basketball.api-sports.io",
+            "url": "https://rapidapi.com",
+            "host": "://rapidapi.com",
             "params": {"league": "12"}
         },
         "wnba": {
-            "url": "https://api-sports.io",
-            "host": "v1.basketball.api-sports.io",
+            "url": "https://rapidapi.com",
+            "host": "://rapidapi.com",
             "params": {"league": "13"}
         },
         "soccer": {
-            "url": "https://api-sports.io",
-            "host": "v3.football.api-sports.io",
+            "url": "https://rapidapi.com",
+            "host": "://rapidapi.com",
             "params": {}
         },
         "tennis": {
-            "url": "https://api-sports.io",
-            "host": "v1.tennis.api-sports.io",
+            "url": "https://rapidapi.com",
+            "host": "://rapidapi.com",
             "params": {}
         }
     }
@@ -78,7 +78,6 @@ def fetch_schedules():
         try:
             response = requests.get(config["url"], headers=headers, params=query_params, timeout=15)
             
-            # Print debug info if the endpoint returns an HTML page instead of JSON
             if response.status_code != 200:
                 print(f"  -> HTTP Error {response.status_code} for {sport_name.upper()}. Check subscription plan.")
                 master_schedule["sports"][sport_name] = {"error": f"HTTP {response.status_code}", "games": []}
@@ -100,7 +99,6 @@ def fetch_schedules():
             }
 
         except ValueError:
-            # Handles text/HTML error responses gracefully without crashing the whole pipeline
             print(f"  -> JSON Parsing failed for {sport_name.upper()}. Endpoint returned plain text or raw HTML.")
             master_schedule["sports"][sport_name] = {"error": "Invalid JSON response from server", "games": []}
         except requests.exceptions.RequestException as e:
