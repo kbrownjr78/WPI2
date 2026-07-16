@@ -36,7 +36,7 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install requests
+          pip install -r requirements.txt
 
       # Step 5: Run the data extraction script
       - name: Fetch Schedules from ESPN
