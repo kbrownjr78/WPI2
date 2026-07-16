@@ -1,6 +1,6 @@
 {
     "date": "2026-07-16",
-    "pulled_at": "2026-07-16T17:12:06.530777Z",
+    "pulled_at": "2026-07-16T17:19:17.434158Z",
     "sports": {
         "mlb": {
             "results_count": 1,
@@ -11,8 +11,7 @@
                     "monte_carlo_engine": {
                         "simulated_home_probability": 0.046,
                         "simulated_away_probability": 0.954,
-                        "sf_live": 1.5778,
-                        "best_bet": "AWAY (+EV 82.21%)"
+                        "best_bet": "AWAY (-110 / Moneyline) (+EV 82.21%)"
                     }
                 }
             ]
@@ -22,27 +21,100 @@
             "games": []
         },
         "wnba": {
-            "results_count": 1,
+            "results_count": 3,
             "games": [
                 {
                     "game_id": "wnba_2001",
                     "matchup": "New York Liberty @ Dallas Wings",
                     "monte_carlo_engine": {
-                        "simulated_home_probability": 0.036,
-                        "simulated_away_probability": 0.964,
-                        "sf_live": 1.5778,
-                        "best_bet": "AWAY (+EV 84.12%)"
+                        "simulated_home_probability": 0.041,
+                        "simulated_away_probability": 0.959,
+                        "best_bet": "AWAY (-110 / Spread) (+EV 83.17%)"
+                    }
+                },
+                {
+                    "game_id": "wnba_2002",
+                    "matchup": "Portland Fire @ Washington Mystics",
+                    "monte_carlo_engine": {
+                        "simulated_home_probability": 0.067,
+                        "simulated_away_probability": 0.933,
+                        "best_bet": "AWAY (-110 / Spread) (+EV 78.2%)"
+                    }
+                },
+                {
+                    "game_id": "wnba_2003",
+                    "matchup": "Golden State Valkyries @ Indiana Fever",
+                    "monte_carlo_engine": {
+                        "simulated_home_probability": 0.054,
+                        "simulated_away_probability": 0.946,
+                        "best_bet": "AWAY (-110 / Spread) (+EV 80.69%)"
                     }
                 }
             ]
         },
         "soccer": {
-            "results_count": 0,
-            "games": []
+            "results_count": 4,
+            "games": [
+                {
+                    "game_id": "soc_3001",
+                    "matchup": "CF Montréal vs Toronto FC",
+                    "monte_carlo_engine": {
+                        "simulated_home_probability": 0.057,
+                        "simulated_away_probability": 0.943,
+                        "best_bet": "AWAY (-110 / Moneyline) (+EV 80.11%)"
+                    }
+                },
+                {
+                    "game_id": "soc_3002",
+                    "matchup": "Chicago Fire vs Vancouver Whitecaps",
+                    "monte_carlo_engine": {
+                        "simulated_home_probability": 0.049,
+                        "simulated_away_probability": 0.951,
+                        "best_bet": "AWAY (-110 / Moneyline) (+EV 81.64%)"
+                    }
+                },
+                {
+                    "game_id": "soc_3003",
+                    "matchup": "St. Louis City SC vs Sporting Kansas City",
+                    "monte_carlo_engine": {
+                        "simulated_home_probability": 0.044,
+                        "simulated_away_probability": 0.956,
+                        "best_bet": "AWAY (-110 / Moneyline) (+EV 82.6%)"
+                    }
+                },
+                {
+                    "game_id": "soc_3004",
+                    "matchup": "Seattle Sounders vs Portland Timbers",
+                    "monte_carlo_engine": {
+                        "simulated_home_probability": 0.05,
+                        "simulated_away_probability": 0.95,
+                        "best_bet": "AWAY (-110 / Moneyline) (+EV 81.45%)"
+                    }
+                }
+            ]
         },
         "tennis": {
-            "results_count": 0,
-            "games": []
+            "results_count": 2,
+            "games": [
+                {
+                    "game_id": "ten_4001",
+                    "matchup": "Stefanos Tsitsipas @ Jerome Kym",
+                    "monte_carlo_engine": {
+                        "simulated_home_probability": 0.058,
+                        "simulated_away_probability": 0.942,
+                        "best_bet": "AWAY (-110 / Match Odds) (+EV 79.92%)"
+                    }
+                },
+                {
+                    "game_id": "ten_4002",
+                    "matchup": "Quentin Halys @ Alexander Bublik",
+                    "monte_carlo_engine": {
+                        "simulated_home_probability": 0.052,
+                        "simulated_away_probability": 0.948,
+                        "best_bet": "AWAY (-110 / Match Odds) (+EV 81.07%)"
+                    }
+                }
+            ]
         }
     }
 }
