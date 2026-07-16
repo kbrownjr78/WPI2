@@ -7,8 +7,8 @@ import requests
 def fetch_schedules():
     """
     Consolidates daily schedules for MLB, NFL, NBA, WNBA, Soccer, and Tennis.
-    Integrates a custom native parsing loop for MLB, while leveraging resilient
-    open-source jsDelivr mirrors for other major sports networks.
+    Integrates live endpoint mapping for MLB via ESPN, while leveraging 
+    resilient open-source jsDelivr mirrors for other major sports networks.
     """
     # 1. Compute today's date formats dynamically
     today_date = datetime.today().strftime('%Y-%m-%d')  # Format: YYYY-MM-DD
@@ -27,10 +27,10 @@ def fetch_schedules():
         "Accept": "application/json"
     }
 
-    # --- SECTION A: INTEGRATED CUSTOM MLB LOOKUP ---
+    # --- SECTION A: INTEGRATED ESPN MLB LOOKUP ---
     print("Fetching data for: MLB...")
-    mlb_url = "https://mlb.com"
-    mlb_params = {"sportId": 1, "date": today_date}
+    mlb_url = "http://espn.com"
+    mlb_params = {"dates": espn_date}
     mlb_games_list = []
 
     try:
@@ -38,28 +38,38 @@ def fetch_schedules():
         mlb_response.raise_for_status()
         schedule_data = mlb_response.json()
         
-        # Custom Integrated Parsing Loop Structure
-        for date_info in schedule_data.get('dates', []):
-            print(f" -> Found Game Date: {date_info['date']}")
-            for game in date_info.get('games', []):
-                away_team = game['teams']['away']['team']['name']
-                home_team = game['teams']['home']['team']['name']
-                print(f"    - {away_team} @ {home_team}")
+        # Printing date header matching your original snippet format
+        print(f"\nDate: {today_date}")
+        
+        events = schedule_data.get("events", [])
+        for event in events:
+            # ESPN nests team information under a competitors list inside the first competition node
+            competitions = event.get("competitions", [{}])[0]
+            competitors = competitions.get("competitors", [])
+            
+            if len(competitors) >= 2:
+                # ESPN standard positioning: index 0 is Home, index 1 is Away
+                home_team = competitors[0].get("team", {}).get("name", "Unknown Home")
+                away_team = competitors[1].get("team", {}).get("name", "Unknown Away")
+                
+                # Custom snippet console logging loop output: " - Away @ Home"
+                print(f" - {away_team} @ {home_team}")
                 
                 # Append cleaned payload data to global array
                 mlb_games_list.append({
-                    "id": game.get("gamePk"),
-                    "name": f"{away_team} @ {home_team}",
-                    "short_name": f"{away_team} vs {home_team}",
-                    "date_utc": game.get("gameDate"),
-                    "status": game.get("status", {}).get("detailedState", "Scheduled")
+                    "id": event.get("id"),
+                    "name": event.get("name"),
+                    "short_name": event.get("shortName"),
+                    "date_utc": event.get("date"),
+                    "status": event.get("status", {}).get("type", {}).get("description", "Scheduled")
                 })
         
         master_schedule["sports"]["mlb"] = {
             "results_count": len(mlb_games_list),
             "games": mlb_games_list
         }
-        print(f"  -> Success: Found {len(mlb_games_list)} MLB games.\n")
+        print(f"  -> Success: Processed {len(mlb_games_list)} MLB games.\n")
+        
     except Exception as e:
         print(f"  -> MLB Extraction error: {e}\n")
         master_schedule["sports"]["mlb"] = {"results_count": 0, "games": []}
