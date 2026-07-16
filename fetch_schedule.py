@@ -6,7 +6,7 @@ import requests
 
 def fetch_schedules():
     """
-    Loops through multiple API-Sports subdomains to aggregate daily schedules
+    Loops through the correct mixed endpoints to aggregate daily schedules
     for MLB, NFL, NBA, WNBA, Soccer, and Tennis into a single JSON artifact.
     """
     # 1. Securely retrieve the API key from GitHub Secrets
@@ -16,36 +16,36 @@ def fetch_schedules():
         print("Please configure this variable in your GitHub Repository Settings > Secrets > Actions.")
         sys.exit(1)
 
-       # 2. Define endpoints and hosts for RapidAPI users
+    # 2. Corrected endpoints balancing Direct Dashboard and RapidAPI structures
     sports_config = {
         "mlb": {
-            "url": "https://rapidapi.com",
-            "host": "api-baseball.p.rapidapi.com",
+            "url": "https://api-sports.io",
+            "host": "v1.baseball.api-sports.io",
             "params": {}
         },
         "nfl": {
-            "url": "https://rapidapi.com",
-            "host": "api-american-football.p.rapidapi.com",
+            "url": "https://api-sports.io",
+            "host": "v1.american-football.api-sports.io",
             "params": {}
         },
         "nba": {
-            "url": "https://rapidapi.com",
-            "host": "api-basketball.p.rapidapi.com",
-            "params": {"league": "12"}  # League ID 12 for NBA
+            "url": "https://api-sports.io",
+            "host": "v1.basketball.api-sports.io",
+            "params": {"league": "12"}
         },
         "wnba": {
-            "url": "https://rapidapi.com",
-            "host": "api-basketball.p.rapidapi.com",
-            "params": {"league": "13"}  # League ID 13 for WNBA
+            "url": "https://api-sports.io",
+            "host": "v1.basketball.api-sports.io",
+            "params": {"league": "13"}
         },
         "soccer": {
-            "url": "https://rapidapi.com",
-            "host": "api-football-v1.p.rapidapi.com",
+            "url": "https://api-sports.io",
+            "host": "v3.football.api-sports.io",
             "params": {}
         },
         "tennis": {
-            "url": "https://rapidapi.com",
-            "host": "api-tennis.p.rapidapi.com",
+            "url": "https://api-sports.io",
+            "host": "v1.tennis.api-sports.io",
             "params": {}
         }
     }
@@ -54,7 +54,6 @@ def fetch_schedules():
     today_date = datetime.today().strftime('%Y-%m-%d')
     print(f"Initializing multi-sport schedule pull for date: {today_date}\n")
     
-    # Storage for aggregated results
     master_schedule = {
         "date": today_date,
         "pulled_at": datetime.utcnow().isoformat() + "Z",
@@ -70,7 +69,6 @@ def fetch_schedules():
             "x-rapidapi-host": config["host"]
         }
         
-        # Merge basic date parameter with sport-specific query parameters
         query_params = {
             "date": today_date,
             "timezone": "America/New_York"
@@ -79,18 +77,20 @@ def fetch_schedules():
 
         try:
             response = requests.get(config["url"], headers=headers, params=query_params, timeout=15)
-            response.raise_for_status() 
             
+            # Print debug info if the endpoint returns an HTML page instead of JSON
+            if response.status_code != 200:
+                print(f"  -> HTTP Error {response.status_code} for {sport_name.upper()}. Check subscription plan.")
+                master_schedule["sports"][sport_name] = {"error": f"HTTP {response.status_code}", "games": []}
+                continue
+                
             data = response.json()
             
-            # Check for API-Sports platform validation/subscription errors
             if "errors" in data and data["errors"]:
                 print(f"  -> API Error for {sport_name.upper()}: {json.dumps(data['errors'])}")
                 master_schedule["sports"][sport_name] = {"error": data["errors"], "games": []}
                 continue
             
-            # Extract games/fixtures payload
-            # Note: Soccer matches are nested under 'response' just like other sports in API-Sports
             games = data.get("response", [])
             print(f"  -> Success: Found {len(games)} matches/games.")
             
@@ -99,6 +99,10 @@ def fetch_schedules():
                 "games": games
             }
 
+        except ValueError:
+            # Handles text/HTML error responses gracefully without crashing the whole pipeline
+            print(f"  -> JSON Parsing failed for {sport_name.upper()}. Endpoint returned plain text or raw HTML.")
+            master_schedule["sports"][sport_name] = {"error": "Invalid JSON response from server", "games": []}
         except requests.exceptions.RequestException as e:
             print(f"  -> Connection failed for {sport_name.upper()}: {e}")
             master_schedule["sports"][sport_name] = {"error": str(e), "games": []}
