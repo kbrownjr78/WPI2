@@ -7,9 +7,8 @@ import requests
 def fetch_schedules():
     """
     Fetches daily match schedules for MLB, NFL, NBA, WNBA, Soccer, and Tennis
-    using free developer feeds and open-access public API mirrors.
+    separating URLs and query strings explicitly using dictionary parameters.
     """
-    # Dynamically compute today's date formats
     today_date = datetime.today().strftime('%Y-%m-%d') # YYYY-MM-DD
     espn_date = datetime.today().strftime('%Y%m%d')    # YYYYMMDD
     
@@ -21,42 +20,48 @@ def fetch_schedules():
         "sports": {}
     }
 
-    # FIXED: Added exact absolute paths and query string boundaries (?) to prevent domain smearing
+    # Base endpoints and explicit separate parameters
     free_endpoints = {
         "mlb": {
-            "url": f"https://espn.com{espn_date}",
+            "url": "https://espn.com",
+            "params": {"dates": espn_date},
             "source": "espn"
         },
         "nfl": {
-            "url": f"https://espn.com{espn_date}",
+            "url": "https://espn.com",
+            "params": {"dates": espn_date},
             "source": "espn"
         },
         "nba": {
-            "url": f"https://espn.com{espn_date}",
+            "url": "https://espn.com",
+            "params": {"dates": espn_date},
             "source": "espn"
         },
         "wnba": {
-            "url": f"https://espn.com{espn_date}",
+            "url": "https://espn.com",
+            "params": {"dates": espn_date},
             "source": "espn"
         },
         "soccer": {
-            "url": f"https://espn.com{espn_date}",
+            "url": "https://espn.com",
+            "params": {"dates": espn_date},
             "source": "espn"
         },
         "tennis": {
-            "url": f"https://thesportsdb.com{today_date}&s=Tennis",
+            "url": "https://thesportsdb.com",
+            "params": {"d": today_date, "s": "Tennis"},
             "source": "sportsdb"
         }
     }
 
-    # Iterate over each sport configuration
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+
     for sport_name, config in free_endpoints.items():
         print(f"Fetching data for: {sport_name.upper()}...")
         
         try:
-            # Send standard desktop user-agent to prevent accidental API connection blocks
-            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
-            response = requests.get(config["url"], headers=headers, timeout=15)
+            # Passing params explicitly solves the domain concatenation bug completely
+            response = requests.get(config["url"], headers=headers, params=config["params"], timeout=15)
             
             if response.status_code != 200:
                 print(f"  -> HTTP Error {response.status_code} for {sport_name.upper()}.")
@@ -66,7 +71,6 @@ def fetch_schedules():
             data = response.json()
             games_list = []
 
-            # Normalize data structure based on the free data source engine
             if config["source"] == "espn":
                 events = data.get("events", [])
                 for event in events:
@@ -104,7 +108,6 @@ def fetch_schedules():
             print(f"  -> Connection failed for {sport_name.upper()}: {e}")
             master_schedule["sports"][sport_name] = {"error": str(e), "games": []}
 
-    # Save the combined master schedule payload to the artifact destination
     output_filename = "sports_schedule.json"
     try:
         with open(output_filename, "w", encoding="utf-8") as f:
