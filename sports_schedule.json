@@ -1,0 +1,48 @@
+{
+    "date": "2026-07-16",
+    "pulled_at": "2026-07-16T17:08:27.517500Z",
+    "sports": {
+        "mlb": {
+            "results_count": 1,
+            "games": [
+                {
+                    "game_id": "mlb_1001",
+                    "matchup": "New York Mets @ Philadelphia Phillies",
+                    "metrics_engine": {
+                        "environmental_lambda": 1.025,
+                        "sf_live": 1.5778,
+                        "wpi_home": 0.0,
+                        "wpi_away": 1.0
+                    }
+                }
+            ]
+        },
+        "nba": {
+            "results_count": 0,
+            "games": []
+        },
+        "wnba": {
+            "results_count": 1,
+            "games": [
+                {
+                    "game_id": "wnba_2001",
+                    "matchup": "New York Liberty @ Dallas Wings",
+                    "metrics_engine": {
+                        "environmental_lambda": 1.0,
+                        "sf_live": 1.5778,
+                        "wpi_home": 0.0,
+                        "wpi_away": 1.0
+                    }
+                }
+            ]
+        },
+        "soccer": {
+            "results_count": 0,
+            "games": []
+        },
+        "tennis": {
+            "results_count": 0,
+            "games": []
+        }
+    }
+}

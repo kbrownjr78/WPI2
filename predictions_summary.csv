@@ -1,0 +1,3 @@
+Sport,Game ID,Matchup,Home Win Prob (WPI),Away Win Prob (WPI),Surge Factor (SF_Live),Weather Exponent (Lambda)
+MLB,mlb_1001,New York Mets @ Philadelphia Phillies,0.0,1.0,1.5778,1.025
+WNBA,wnba_2001,New York Liberty @ Dallas Wings,0.0,1.0,1.5778,1.0
