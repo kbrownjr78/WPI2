@@ -19,25 +19,30 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Step 2: Initialize Python
-      - name: Set up Python
+      # Step 2: Initialize Node.js environment
+      - name: Set up Node.js
         uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Step 3: Initialize Python environment
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip' # Optional: automatically caches dependencies if you add a requirements.txt
+          cache: 'pip'
 
-      # Step 3: Install necessary web scraping/request libraries
+      # Step 4: Install necessary web scraping/request libraries
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install requests
 
-      # Step 4: Run the data extraction script
+      # Step 5: Run the data extraction script
       - name: Fetch Schedules from ESPN
         run: python fetch_schedules.py
 
-      # Step 5: Save and push changed data back to GitHub
+      # Step 6: Save and push changed data back to GitHub
       - name: Commit and Push Changes
         run: |
           git config --global user.name "github-actions[bot]"
@@ -50,4 +55,4 @@ jobs:
           else
             git commit -m "Automated Sync: Updated ESPN sports schedules [skip ci]"
             git push
-          |
+          fi
