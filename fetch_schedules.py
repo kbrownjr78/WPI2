@@ -1,42 +1,43 @@
-import json
 import os
+import sys
+import json
 import requests
 
-# Dictionary mapping local file names to hidden ESPN core API endpoints
-SPORTS_ENDPOINTS = {
-    "nfl": "https://espn.com",
-    "nba": "https://espn.com",
-    "mlb": "https://espn.com",
-    "nhl": "https://espn.com",
-    "soccer_epl": "https://espn.com"
-}
+def fetch_schedules():
+    # Retrieve the API key securely from GitLab CI/CD Variables
+    api_key = os.environ.get("SPORTS_API_KEY")
+    if not api_key:
+        print("Error: SPORTS_API_KEY environment variable is missing.")
+        sys.exit(1)
 
-def fetch_and_save_schedule():
-    # Ensure target directory exists
-    os.makedirs("data", exist_ok=True)
+    # Example endpoint using the multi-sport API-Sports platform
+    url = "https://api-sports.io"
     
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        "x-rapidapi-key": api_key,
+        "x-rapidapi-host": "v3.football.api-sports.io"
     }
+    
+    # Query parameters (e.g., fetching today's matches)
+    # Adjust live=all, next=10, or date=YYYY-MM-DD based on needs
+    params = {"live": "all"} 
 
-    for sport, url in SPORTS_ENDPOINTS.items():
-        print(f"Fetching current schedule data for: {sport.upper()}...")
-        try:
-            response = requests.get(url, headers=headers, timeout=15)
+    try:
+        response = requests.get(url, headers=headers, params=params, timeout=10)
+        response.raise_for_status()
+        
+        data = response.json()
+        
+        # Save the schedule data to an artifact file
+        output_filename = "sports_schedule.json"
+        with open(output_filename, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
             
-            if response.status_code == 200:
-                data = response.json()
-                
-                # Save beautifully formatted JSON
-                file_path = f"data/{sport}_schedule.json"
-                with open(file_path, "w", encoding="utf-8") as f:
-                    json.dump(data, f, indent=2, ensure_ascii=False)
-                print(f"Successfully saved {file_path}")
-            else:
-                print(f"Failed to fetch {sport}: HTTP Status {response.status_code}")
-                
-        except Exception as e:
-            print(f"An error occurred while processing {sport}: {str(e)}")
+        print(f"Successfully saved schedule data to {output_filename}")
+
+    except requests.exceptions.RequestException as e:
+        print(f"Pipeline API request failed: {e}")
+        sys.exit(1)
 
 if __name__ == "__main__":
-    fetch_and_save_schedule()
+    fetch_schedules()
