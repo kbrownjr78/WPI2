@@ -1,0 +1,17 @@
+stages:
+  - fetch
+
+fetch_sports_schedule:
+  stage: fetch
+  image: python:3.11-slim
+  before_script:
+    # Upgrade pip and install standard dependencies
+     piety- - pip install --no-cache-dir --upgrade pip
+    - pip install -r requirements.txt
+  script:
+    - python fetch_schedule.py
+  artifacts:
+    name: "sports-schedule-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - sports_schedule.json
+    expire_in: 1 week
