@@ -2,10 +2,10 @@ name: Daily Sports Schedule Pull
 
 on:
   schedule:
-    # Runs at 06:00 UTC every single day
+    # Runs automatically at 06:00 UTC every single day
     - cron: '0 6 * * *'
   workflow_dispatch:
-    # Allows you to manually trigger the workflow from the Actions tab
+    # Allows you to manually trigger the workflow from the Actions tab anytime
 
 jobs:
   fetch-sports:
@@ -27,9 +27,7 @@ jobs:
         pip install -r requirements.txt
 
     - name: Run schedule fetcher script
-      env:
-        # Securely pass your secret token into the environment
-        SPORTS_API_KEY: ${{ secrets.SPORTS_API_KEY }}
+      # Runs the script cleanly without requiring GitHub Secrets or tokens
       run: python fetch_schedule.py
 
     - name: Save schedule as a workflow artifact
