@@ -6,14 +6,11 @@ import requests
 
 def fetch_schedules():
     """
-    Fetches daily match schedules for MLB, NFL, NBA, WNBA, Soccer, and Tennis
-    by routing requests directly through open data mirrors to bypass CDN blocks.
+    Fetches daily schedules for MLB, NFL, NBA, WNBA, Soccer, and Tennis
+    using open, keyless league-native APIs that do not block GitHub Actions runners.
     """
-    # 1. Generate structural date formatting
-    today_date = datetime.today().strftime('%Y-%m-%d') # YYYY-MM-DD
-    espn_date = datetime.today().strftime('%Y%m%d')    # YYYYMMDD
-    
-    print(f"Initializing FREE multi-sport schedule pull for date: {today_date}\n")
+    today_date = datetime.today().strftime('%Y-%m-%d') # Format: YYYY-MM-DD
+    print(f"Initializing LEAGUE-NATIVE schedule pull for date: {today_date}\n")
     
     master_schedule = {
         "date": today_date,
@@ -21,80 +18,118 @@ def fetch_schedules():
         "sports": {}
     }
 
-    # 2. Redirect endpoints to SportsDataverse open public data caches
-    # These structures mirror the live ESPN API feeds but do not challenge GitHub runner IPs.
-    free_endpoints = {
+    # Config using native, keyless endpoints with explicit params to avoid string smearing
+    league_endpoints = {
         "mlb": {
-            "url": f"https://githubusercontent.com{espn_date}_scoreboard.json",
-            "fallback_url": "https://espn.com",
-            "source": "dataverse"
-        },
-        "nfl": {
-            "url": f"https://githubusercontent.com{espn_date}_scoreboard.json",
-            "fallback_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard",
-            "source": "dataverse"
+            "url": "https://mlb.com",
+            "params": {"sportId": 1, "date": today_date},
+            "source": "mlb"
         },
         "nba": {
-            "url": f"https://githubusercontent.com{espn_date}_scoreboard.json",
-            "fallback_url": "https://espn.com",
-            "source": "dataverse"
+            "url": "https://nba.net",  # Native NBA CDN path
+            "params": {},
+            "source": "nba"
         },
         "wnba": {
-            "url": f"https://githubusercontent.com{espn_date}_scoreboard.json",
-            "fallback_url": "https://espn.com",
-            "source": "dataverse"
+            "url": "https://wnba.com",
+            "params": {},
+            "source": "wnba"
+        },
+        "nfl": {
+            # Public, unblocked NFL metadata endpoints
+            "url": "https://nfl.com",
+            "params": {},
+            "source": "nfl"
         },
         "soccer": {
-            # Global soccer queries pull via standard live web gateways which accept fallback arrays
-            "url": "https://espn.com",
-            "fallback_url": "https://espn.com",
-            "source": "live_web"
+            # Open European football scoreboard feed via public API aggregator
+            "url": "https://dw.com",
+            "params": {"date": today_date},
+            "source": "soccer"
         },
         "tennis": {
-            "url": "https://espn.com",
-            "fallback_url": "https://espn.com",
-            "source": "live_web"
+            # Live open-access web endpoint for ATP/WTA tournament daily overviews
+            "url": "https://matchstat.com",
+            "params": {"date": today_date},
+            "source": "tennis"
         }
     }
 
-    # Browser-grade header mimics to guarantee web framework allowance
     headers = {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "application/json",
-        "Accept-Language": "en-US,en;q=0.9"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Accept": "application/json"
     }
 
-    # 3. Iterate over each sport configuration
-    for sport_name, config in free_endpoints.items():
+    for sport_name, config in league_endpoints.items():
         print(f"Fetching data for: {sport_name.upper()}...")
         games_list = []
         
         try:
-            # Attempt to pull from open data mirror first
-            if config["source"] == "dataverse":
-                response = requests.get(config["url"], headers=headers, timeout=10)
-                # Fall back to live web route if the mirror file isn't built yet for today
-                if response.status_code != 200:
-                    response = requests.get(config["fallback_url"], headers=headers, params={"dates": espn_date}, timeout=10)
-            else:
-                response = requests.get(config["url"], headers=headers, params={"dates": espn_date}, timeout=10)
+            response = requests.get(config["url"], headers=headers, params=config["params"], timeout=15)
             
             if response.status_code != 200:
-                print(f"  -> HTTP Error {response.status_code} for {sport_name.upper()}. No cache available.")
+                print(f"  -> Skipping {sport_name.upper()}: No live games or endpoint offline today (HTTP {response.status_code}).")
                 master_schedule["sports"][sport_name] = {"results_count": 0, "games": []}
                 continue
                 
             data = response.json()
-            events = data.get("events", [])
-            
-            for event in events:
-                games_list.append({
-                    "id": event.get("id"),
-                    "name": event.get("name"),
-                    "short_name": event.get("shortName"),
-                    "date_utc": event.get("date"),
-                    "status": event.get("status", {}).get("type", {}).get("description")
-                })
+
+            # Unique data parsing structures for each league engine
+            if config["source"] == "mlb":
+                dates_list = data.get("dates", [])
+                for d in dates_list:
+                    for game in d.get("games", []):
+                        games_list.append({
+                            "id": game.get("gamePk"),
+                            "name": f"{game.get('teams', {}).get('away', {}).get('team', {}).get('name')} @ {game.get('teams', {}).get('home', {}).get('team', {}).get('name')}",
+                            "short_name": f"{game.get('teams', {}).get('away', {}).get('team', {}).get('name')} vs {game.get('teams', {}).get('home', {}).get('team', {}).get('name')}",
+                            "date_utc": game.get("gameDate"),
+                            "status": game.get("status", {}).get("detailedState")
+                        })
+                        
+            elif config["source"] in ["nba", "wnba"]:
+                games = data.get("games", [])
+                for game in games:
+                    if game.get("startDateEastern") == today_date.replace("-", ""):
+                        games_list.append({
+                            "id": game.get("gameId"),
+                            "name": f"{game.get('vTeam', {}).get('triCode')} @ {game.get('hTeam', {}).get('triCode')}",
+                            "short_name": f"{game.get('vTeam', {}).get('triCode')} vs {game.get('hTeam', {}).get('triCode')}",
+                            "date_utc": game.get("startTimeUTC"),
+                            "status": "Scheduled"
+                        })
+                        
+            elif config["source"] == "nfl":
+                game_scores = data.get("gameScores", [])
+                for g in game_scores:
+                    game_info = g.get("gameSchedule", {})
+                    games_list.append({
+                        "id": game_info.get("gameId"),
+                        "name": f"{game_info.get('visitorNickname')} @ {game_info.get('homeNickname')}",
+                        "short_name": f"{game_info.get('visitorTeamAbbr')} vs {game_info.get('homeTeamAbbr')}",
+                        "date_utc": f"{game_info.get('gameDate')}T{game_info.get('gameTimeEastern')}",
+                        "status": "Scheduled"
+                    })
+                    
+            elif config["source"] == "soccer":
+                for fixture in data.get("data", []):
+                    games_list.append({
+                        "id": fixture.get("id"),
+                        "name": f"{fixture.get('homeTeam', {}).get('name')} vs {fixture.get('awayTeam', {}).get('name')}",
+                        "short_name": f"{fixture.get('homeTeam', {}).get('shortName')} vs {fixture.get('awayTeam', {}).get('shortName')}",
+                        "date_utc": fixture.get("date"),
+                        "status": fixture.get("status")
+                    })
+                    
+            elif config["source"] == "tennis":
+                for match in data.get("matches", []):
+                    games_list.append({
+                        "id": match.get("id"),
+                        "name": f"{match.get('player1_name')} vs {match.get('player2_name')}",
+                        "short_name": "Tennis Matchup",
+                        "date_utc": match.get("date"),
+                        "status": match.get("status")
+                    })
 
             print(f"  -> Success: Found {len(games_list)} matches/games.")
             master_schedule["sports"][sport_name] = {
@@ -103,7 +138,7 @@ def fetch_schedules():
             }
 
         except Exception as e:
-            print(f"  -> Bypass mapping triggered for {sport_name.upper()}: {e}")
+            print(f"  -> Extraction paused for {sport_name.upper()}: {e}")
             master_schedule["sports"][sport_name] = {"results_count": 0, "games": []}
 
     # 4. Save combined structural payload data 
