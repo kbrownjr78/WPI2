@@ -22,7 +22,6 @@ def calculate_sf_live(delta_ts, delta_def, rest_hours, travel_friction):
     alpha, beta, tau = 0.50, 0.25, 0.15
     ln_rest = math.log(max(rest_hours, 1))
     return alpha * (delta_ts - delta_def) + beta * ln_rest - (tau * travel_friction)
-
 def run_monte_carlo_simulation(home_stats, away_stats, venue_vi, sf_live, weather_lambda, iterations=1000):
     """
     EQUATION 1 & 2 OVERRIDE: Stochastic Monte Carlo Simulation Engine.
@@ -32,7 +31,7 @@ def run_monte_carlo_simulation(home_stats, away_stats, venue_vi, sf_live, weathe
     alpha_w, beta_w, gamma_w, delta_w = 0.45, 0.45, 0.10, 0.05
     
     for _ in range(iterations):
-        # Inject stochastic normal variance (Volatility σ = 5.0) into dynamic indexes
+        # Inject stochastic normal variance into dynamic indexes
         # Down-weight box scores by 35% (0.65 multiplier)
         oi_home_sim = random.normalvariate(home_stats['eff_baseline'] * 0.65, 5.0) * (1 + home_stats['player_surge'])
         oi_away_sim = random.normalvariate(away_stats['eff_baseline'] * 0.65, 5.0) * (1 + away_stats['player_surge'])
@@ -60,14 +59,10 @@ def run_monte_carlo_simulation(home_stats, away_stats, venue_vi, sf_live, weathe
     return simulated_home_prob, simulated_away_prob
 
 def calculate_best_bet(home_prob, away_prob, sport_name="MLB"):
-    """
-    Calculates Expected Value (+EV) based on simulated probability vs market odds.
-    Default market setting assumes a standard sportsbook -110 juice line (52.38% implied).
-    """
+    """Calculates Expected Value (+EV) against a standard -110 juice line."""
     ev_home = (home_prob * 0.91) - (1.0 - home_prob)
     ev_away = (away_prob * 0.91) - (1.0 - away_prob)
     
-    # Custom betting tag format strings based on sport types
     market_tag = "Moneyline"
     if sport_name in ["NBA", "WNBA", "NFL"]:
         market_tag = "Spread"
@@ -79,11 +74,10 @@ def calculate_best_bet(home_prob, away_prob, sport_name="MLB"):
     elif ev_away > ev_home and ev_away > 0:
         return f"AWAY (-110 / {market_tag}) (+EV {round(ev_away * 100, 2)}%)"
     return "PASS (No Edge)"
-
 def fetch_schedules():
     """Consolidates data matrices and compiles automated CSV Best Bets Summary."""
-    today_date = "2026-07-16"
-    espn_date = "20260716"
+    today_date = datetime.today().strftime('%Y-%m-%d')
+    espn_date = datetime.today().strftime('%Y%m%d')
     print(f"Initializing Stochastic Monte Carlo Engine for: {today_date}\n")
     
     master_schedule = {
@@ -132,7 +126,7 @@ def fetch_schedules():
         except Exception as e:
             print(f"  -> API fetch bypassed: {e}")
 
-        # Local fault-protection inject structures if live feeds are empty or blocked
+        # Local fault-protection structures if live feeds are empty
         if not games_list and sport_name == "mlb":
             games_list = [{"id": "mlb_1001", "home": "Philadelphia Phillies", "away": "New York Mets"}]
         elif not games_list and sport_name == "wnba":
@@ -153,7 +147,6 @@ def fetch_schedules():
                 {"id": "ten_4001", "home": "Jerome Kym", "away": "Stefanos Tsitsipas"},
                 {"id": "ten_4002", "home": "Alexander Bublik", "away": "Quentin Halys"}
             ]
-
         processed_games = []
         for game in games_list:
             weather_lambda = get_environmental_lambda(temp=84, humidity=62, is_indoor=(sport_name in ["nba", "wnba"]))
@@ -187,11 +180,9 @@ def fetch_schedules():
                 }
             })
             
-            # Format percentages explicitly for spreadsheet clarity (e.g., 61.2%)
             home_pct = f"{round(home_sim_prob * 100, 1)}%"
             away_pct = f"{round(away_sim_prob * 100, 1)}%"
             
-            # Append rows matching desired scannable schema layout
             csv_rows.append([
                 sport_name.upper(),
                 matchup_name,
@@ -201,3 +192,28 @@ def fetch_schedules():
             ])
             print(f"   - {matchup_name} -> Home Win %: {home_pct} | Best Bet: {best_bet}")
 
+        master_schedule["sports"][sport_name] = {
+            "results_count": len(processed_games),
+            "games": processed_games
+        }
+        print("")
+
+    # Output JSON Database artifact
+    with open("sports_schedule.json", "w", encoding="utf-8") as f:
+        json.dump(master_schedule, f, indent=4, ensure_ascii=False)
+        
+    # Write data fields to CSV spreadsheet layout
+    csv_filename = "best_bets_summary.csv"
+    csv_headers = ["Sport", "Matchup", "Simulated Home Win %", "Simulated Away Win %", "Best Bet Recommendation"]
+    
+    try:
+        with open(csv_filename, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(csv_headers)
+            writer.writerows(csv_rows)
+        print(f"Spreadsheet Export Successful: Summary saved into '{csv_filename}'.")
+    except IOError as e:
+        print(f"Error compiling output CSV layout structure: {e}")
+
+if __name__ == "__main__":
+    fetch_schedules()
