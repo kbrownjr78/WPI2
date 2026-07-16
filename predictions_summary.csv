@@ -1,3 +1,11 @@
-Sport,Game ID,Matchup,Sim Home Prob,Sim Away Prob,Surge Factor (SF_Live),Best Bet Recommendation
-MLB,mlb_1001,New York Mets @ Philadelphia Phillies,0.046,0.954,1.5778,AWAY (+EV 82.21%)
-WNBA,wnba_2001,New York Liberty @ Dallas Wings,0.036,0.964,1.5778,AWAY (+EV 84.12%)
+Sport,Matchup,Simulated Home Win %,Simulated Away Win %,Best Bet Recommendation
+MLB,New York Mets @ Philadelphia Phillies,5.7%,94.3%,AWAY (-110 / Moneyline) (+EV 80.11%)
+WNBA,New York Liberty @ Dallas Wings,5.2%,94.8%,AWAY (-110 / Spread) (+EV 81.07%)
+WNBA,Portland Fire @ Washington Mystics,5.3%,94.7%,AWAY (-110 / Spread) (+EV 80.88%)
+WNBA,Golden State Valkyries @ Indiana Fever,4.7%,95.3%,AWAY (-110 / Spread) (+EV 82.02%)
+SOCCER,CF Montréal vs Toronto FC,6.3%,93.7%,AWAY (-110 / Moneyline) (+EV 78.97%)
+SOCCER,Chicago Fire vs Vancouver Whitecaps,4.6%,95.4%,AWAY (-110 / Moneyline) (+EV 82.21%)
+SOCCER,St. Louis City SC vs Sporting Kansas City,4.5%,95.5%,AWAY (-110 / Moneyline) (+EV 82.41%)
+SOCCER,Seattle Sounders vs Portland Timbers,3.9%,96.1%,AWAY (-110 / Moneyline) (+EV 83.55%)
+TENNIS,Stefanos Tsitsipas @ Jerome Kym,7.1%,92.9%,AWAY (-110 / Match Odds) (+EV 77.44%)
+TENNIS,Quentin Halys @ Alexander Bublik,4.4%,95.6%,AWAY (-110 / Match Odds) (+EV 82.6%)
