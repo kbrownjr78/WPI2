@@ -1,16 +1,18 @@
 import os
 import sys
 import json
+import posixpath
 from datetime import datetime
+from urllib.parse import urljoin
 import requests
 
 def fetch_schedules():
     """
     Fetches daily match schedules for MLB, NFL, NBA, WNBA, Soccer, and Tennis
-    by routing data payloads through the jsDelivr open proxy engine.
+    using strict URL joining libraries to prevent any string smearing.
     """
-    today_date = datetime.today().strftime('%Y-%m-%d') # Format: YYYY-MM-DD
-    espn_date = datetime.today().strftime('%Y%m%d')    # Format: YYYYMMDD
+    today_date = datetime.today().strftime('%Y-%m-%d')
+    espn_date = datetime.today().strftime('%Y%m%d')
     print(f"Initializing FREE multi-sport schedule pull for date: {today_date}\n")
     
     master_schedule = {
@@ -19,32 +21,34 @@ def fetch_schedules():
         "sports": {}
     }
 
-    # Bypasses GitHub blocks by using jsDelivr CDN proxies over raw files
-    free_endpoints = {
-        "mlb": "https://jsdelivr.net",
-        "nfl": "https://jsdelivr.net",
-        "nba": "https://jsdelivr.net",
-        "wnba": "https://jsdelivr.net",
-        "soccer": "https://jsdelivr.net",
-        "tennis": "https://jsdelivr.net"
+    # Strict structure: Base domain URL is completely isolated from the path directories
+    cdn_root = "https://jsdelivr.net"
+    
+    sports_paths = {
+        "mlb": f"/gh/sportsdataverse/sportsdataverse-data@main/baseball/mlb/scoreboard/{espn_date}_scoreboard.json",
+        "nfl": f"/gh/sportsdataverse/sportsdataverse-data@main/football/nfl/scoreboard/{espn_date}_scoreboard.json",
+        "nba": f"/gh/sportsdataverse/sportsdataverse-data@main/basketball/nba/scoreboard/{espn_date}_scoreboard.json",
+        "wnba": f"/gh/sportsdataverse/sportsdataverse-data@main/basketball/wnba/scoreboard/{espn_date}_scoreboard.json",
+        "soccer": f"/gh/sportsdataverse/sportsdataverse-data@main/soccer/scoreboard/{espn_date}_scoreboard.json",
+        "tennis": f"/gh/sportsdataverse/sportsdataverse-data@main/tennis/scoreboard/{espn_date}_scoreboard.json"
     }
 
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
         "Accept": "application/json"
     }
 
-    for sport_name, base_url in free_endpoints.items():
+    for sport_name, path in sports_paths.items():
         print(f"Fetching data for: {sport_name.upper()}...")
         games_list = []
         
-        # Build the exact file path target
-        target_url = f"{base_url}{espn_date}_scoreboard.json"
+        # Standard urllib urljoin ensures the domain and path are joined flawlessly
+        target_url = urljoin(cdn_root, path)
+        print(f"  -> Target URL: {target_url}")  # This will print the exact clean URL in GitHub Actions
         
         try:
             response = requests.get(target_url, headers=headers, timeout=12)
             
-            # If a league has no games today or the cache isn't built yet, skip gracefully
             if response.status_code != 200:
                 print(f"  -> No data listed for {sport_name.upper()} today (HTTP {response.status_code}).")
                 master_schedule["sports"][sport_name] = {"results_count": 0, "games": []}
