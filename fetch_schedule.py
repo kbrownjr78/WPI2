@@ -1,7 +1,6 @@
 import os
 import sys
 import json
-import posixpath
 from datetime import datetime
 from urllib.parse import urljoin
 import requests
@@ -9,7 +8,7 @@ import requests
 def fetch_schedules():
     """
     Fetches daily match schedules for MLB, NFL, NBA, WNBA, Soccer, and Tennis
-    using strict URL joining libraries to prevent any string smearing.
+    using strict URL joining libraries to the live jsDelivr CDN endpoint.
     """
     today_date = datetime.today().strftime('%Y-%m-%d')
     espn_date = datetime.today().strftime('%Y%m%d')
@@ -21,8 +20,8 @@ def fetch_schedules():
         "sports": {}
     }
 
-    # Strict structure: Base domain URL is completely isolated from the path directories
-    cdn_root = "https://jsdelivr.net"
+    # FIXED: Replaced 'jsdelivr.net' with the correct, active CDN root 'cdn.jsdelivr.net'
+    cdn_root = "https://cdn.jsdelivr.net"
     
     sports_paths = {
         "mlb": f"/gh/sportsdataverse/sportsdataverse-data@main/baseball/mlb/scoreboard/{espn_date}_scoreboard.json",
@@ -42,15 +41,15 @@ def fetch_schedules():
         print(f"Fetching data for: {sport_name.upper()}...")
         games_list = []
         
-        # Standard urllib urljoin ensures the domain and path are joined flawlessly
         target_url = urljoin(cdn_root, path)
-        print(f"  -> Target URL: {target_url}")  # This will print the exact clean URL in GitHub Actions
+        print(f"  -> Target URL: {target_url}")
         
         try:
-            response = requests.get(target_url, headers=headers, timeout=12)
+            response = requests.get(target_url, headers=headers, timeout=15)
             
+            # If a league has no games today or the data cache file hasn't compiled yet, handle it cleanly
             if response.status_code != 200:
-                print(f"  -> No data listed for {sport_name.upper()} today (HTTP {response.status_code}).")
+                print(f"  -> No live schedule data available for {sport_name.upper()} today (HTTP {response.status_code}).")
                 master_schedule["sports"][sport_name] = {"results_count": 0, "games": []}
                 continue
                 
