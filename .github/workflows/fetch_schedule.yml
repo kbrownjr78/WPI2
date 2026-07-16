@@ -1,0 +1,40 @@
+name: Daily Sports Schedule Pull
+
+on:
+  schedule:
+    # Runs at 06:00 UTC every single day
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    # Allows you to manually trigger the workflow from the Actions tab
+
+jobs:
+  fetch-sports:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository code
+      uses: actions/checkout@v4
+
+    - name: Set up Python environment
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip' # Automatically caches dependencies for faster runs
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run schedule fetcher script
+      env:
+        # Securely pass your secret token into the environment
+        SPORTS_API_KEY: ${{ secrets.SPORTS_API_KEY }}
+      run: python fetch_schedule.py
+
+    - name: Save schedule as a workflow artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: sports-schedule
+        path: sports_schedule.json
+        retention-days: 7
