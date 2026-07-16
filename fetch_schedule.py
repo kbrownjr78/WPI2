@@ -16,36 +16,36 @@ def fetch_schedules():
         print("Please configure this variable in your GitHub Repository Settings > Secrets > Actions.")
         sys.exit(1)
 
-    # 2. Define endpoints and hosts for each required sport
+       # 2. Define endpoints and hosts for RapidAPI users
     sports_config = {
         "mlb": {
-            "url": "https://api-sports.io",
-            "host": "v1.baseball.api-sports.io",
+            "url": "https://rapidapi.com",
+            "host": "api-baseball.p.rapidapi.com",
             "params": {}
         },
         "nfl": {
-            "url": "https://api-sports.io",
-            "host": "v1.american-football.api-sports.io",
+            "url": "https://rapidapi.com",
+            "host": "api-american-football.p.rapidapi.com",
             "params": {}
         },
         "nba": {
-            "url": "https://api-sports.io",
-            "host": "v1.basketball.api-sports.io",
-            "params": {"league": "12"}  # League ID 12 targets the NBA
+            "url": "https://rapidapi.com",
+            "host": "api-basketball.p.rapidapi.com",
+            "params": {"league": "12"}  # League ID 12 for NBA
         },
         "wnba": {
-            "url": "https://api-sports.io",
-            "host": "v1.basketball.api-sports.io",
-            "params": {"league": "13"}  # League ID 13 targets the WNBA
+            "url": "https://rapidapi.com",
+            "host": "api-basketball.p.rapidapi.com",
+            "params": {"league": "13"}  # League ID 13 for WNBA
         },
         "soccer": {
-            "url": "https://api-sports.io",
-            "host": "v3.football.api-sports.io",
+            "url": "https://rapidapi.com",
+            "host": "api-football-v1.p.rapidapi.com",
             "params": {}
         },
         "tennis": {
-            "url": "https://api-sports.io",
-            "host": "v1.tennis.api-sports.io",
+            "url": "https://rapidapi.com",
+            "host": "api-tennis.p.rapidapi.com",
             "params": {}
         }
     }
