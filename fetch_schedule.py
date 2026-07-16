@@ -6,53 +6,14 @@ import requests
 
 def fetch_schedules():
     """
-    Loops through the correct RapidAPI proxy endpoints to aggregate daily schedules
-    for MLB, NFL, NBA, WNBA, Soccer, and Tennis into a single JSON artifact.
+    Fetches daily match schedules for MLB, NFL, NBA, WNBA, Soccer, and Tennis
+    using free developer feeds and open-access public API mirrors.
     """
-    # 1. Securely retrieve the API key from GitHub Secrets
-    api_key = os.environ.get("SPORTS_API_KEY")
-    if not api_key:
-        print("CRITICAL ERROR: 'SPORTS_API_KEY' environment variable is missing.")
-        print("Please configure this variable in your GitHub Repository Settings > Secrets > Actions.")
-        sys.exit(1)
-
-    # 2. Endpoints explicitly routing through the RapidAPI domain network
-    sports_config = {
-        "mlb": {
-            "url": "https://rapidapi.com",
-            "host": "api-baseball.p.rapidapi.com",
-            "params": {}
-        },
-        "nfl": {
-            "url": "https://rapidapi.com",
-            "host": "api-american-football.p.rapidapi.com",
-            "params": {}
-        },
-        "nba": {
-            "url": "https://rapidapi.com",
-            "host": "api-basketball.p.rapidapi.com",
-            "params": {"league": "12"}
-        },
-        "wnba": {
-            "url": "https://rapidapi.com",
-            "host": "api-basketball.p.rapidapi.com",
-            "params": {"league": "13"}
-        },
-        "soccer": {
-            "url": "https://rapidapi.com",
-            "host": "api-football-v1.p.rapidapi.com",
-            "params": {}
-        },
-        "tennis": {
-            "url": "https://rapidapi.com",
-            "host": "api-tennis.p.rapidapi.com",
-            "params": {}
-        }
-    }
+    # Dynamically compute today's date formats
+    today_date = datetime.today().strftime('%Y-%m-%d') # YYYY-MM-DD
+    espn_date = datetime.today().strftime('%Y%m%d')    # YYYYMMDD
     
-    # 3. Dynamically compute today's date
-    today_date = datetime.today().strftime('%Y-%m-%d')
-    print(f"Initializing multi-sport schedule pull for date: {today_date}\n")
+    print(f"Initializing FREE multi-sport schedule pull for date: {today_date}\n")
     
     master_schedule = {
         "date": today_date,
@@ -60,66 +21,98 @@ def fetch_schedules():
         "sports": {}
     }
 
-    # 4. Iterate over each sport configuration
-    for sport_name, config in sports_config.items():
+    # Configuration for open endpoints (Mix of ESPN Public APIs and TheSportsDB Free Mirror)
+    # These public feeds require NO api keys or basic developer keys.
+    free_endpoints = {
+        "mlb": {
+            "url": f"https://espn.com{espn_date}",
+            "source": "espn"
+        },
+        "nfl": {
+            "url": f"https://espn.com{espn_date}",
+            "source": "espn"
+        },
+        "nba": {
+            "url": f"https://espn.com{espn_date}",
+            "source": "espn"
+        },
+        "wnba": {
+            "url": f"https://espn.com{espn_date}",
+            "source": "espn"
+        },
+        "soccer": {
+            "url": f"https://espn.com{espn_date}",
+            "source": "espn"
+        },
+        "tennis": {
+            # Public test key '1' is open for all developers on TheSportsDB
+            "url": f"https://thesportsdb.com{today_date}&s=Tennis",
+            "source": "sportsdb"
+        }
+    }
+
+    # Iterate over each sport configuration
+    for sport_name, config in free_endpoints.items():
         print(f"Fetching data for: {sport_name.upper()}...")
         
-        # FIXED: Added 'accept' and 'Content-Type' headers to block raw HTML error drops
-        headers = {
-            "x-rapidapi-key": api_key,
-            "x-rapidapi-host": config["host"],
-            "accept": "application/json",
-            "Content-Type": "application/json"
-        }
-        
-        query_params = {
-            "date": today_date,
-            "timezone": "America/New_York"
-        }
-        query_params.update(config["params"])
-
         try:
-            response = requests.get(config["url"], headers=headers, params=query_params, timeout=15)
+            # No authentication headers required for these public data mirrors
+            response = requests.get(config["url"], timeout=15)
             
-            # Catch plain text subscription block sheets from RapidAPI early
-            if "content-type" in response.headers and "text/html" in response.headers["content-type"]:
-                print(f"  -> Subscription Error: RapidAPI refused connection. Your account is likely not subscribed to the {sport_name.upper()} API.")
-                master_schedule["sports"][sport_name] = {"error": "Not subscribed on RapidAPI profile", "games": []}
-                continue
-
             if response.status_code != 200:
-                print(f"  -> HTTP Error {response.status_code} for {sport_name.upper()}. Check plan limits.")
-                master_schedule["sports"][sport_name] = {"error": f"HTTP {response.status_code}", "games": []}
+                print(f"  -> HTTP Error {response.status_code} for {sport_name.upper()}.")
+                master_schedule["sports"][sport_name] = {"games": []}
                 continue
                 
             data = response.json()
+            games_list = []
+
+            # Normalize data structure based on the free data source engine
+            if config["source"] == "espn":
+                events = data.get("events", [])
+                for event in events:
+                    # Clean extraction of essential schedule data points
+                    games_list.append({
+                        "id": event.get("id"),
+                        "name": event.get("name"),
+                        "short_name": event.get("shortName"),
+                        "date_utc": event.get("date"),
+                        "status": event.get("status", {}).get("type", {}).get("description")
+                    })
             
-            if "errors" in data and data["errors"]:
-                print(f"  -> API Error for {sport_name.upper()}: {json.dumps(data['errors'])}")
-                master_schedule["sports"][sport_name] = {"error": data["errors"], "games": []}
-                continue
-            
-            games = data.get("response", [])
-            print(f"  -> Success: Found {len(games)} matches/games.")
-            
+            elif config["source"] == "sportsdb":
+                events = data.get("events", [])
+                # TheSportsDB returns None instead of empty array if no matches are scheduled
+                if events is None:
+                    events = []
+                for event in events:
+                    games_list.append({
+                        "id": event.get("idEvent"),
+                        "name": event.get("strEvent"),
+                        "short_name": f"{event.get('strHomeTeam')} vs {event.get('strAwayTeam')}",
+                        "date_utc": f"{event.get('dateEvent')}T{event.get('strTime')}",
+                        "status": event.get("strStatus")
+                    })
+
+            print(f"  -> Success: Found {len(games_list)} matches/games.")
             master_schedule["sports"][sport_name] = {
-                "results_count": len(games),
-                "games": games
+                "results_count": len(games_list),
+                "games": games_list
             }
 
-        except ValueError:
-            print(f"  -> JSON Parsing failed for {sport_name.upper()}. Endpoint returned text data.")
-            master_schedule["sports"][sport_name] = {"error": "Invalid payload body layout", "games": []}
+        except (ValueError, KeyError) as parse_err:
+            print(f"  -> Parsing failed for {sport_name.upper()}: {parse_err}")
+            master_schedule["sports"][sport_name] = {"error": "Invalid payload mapping", "games": []}
         except requests.exceptions.RequestException as e:
             print(f"  -> Connection failed for {sport_name.upper()}: {e}")
             master_schedule["sports"][sport_name] = {"error": str(e), "games": []}
 
-    # 5. Write the combined master schedule payload to the artifact destination
+    # Save the combined master schedule payload to the artifact destination
     output_filename = "sports_schedule.json"
     try:
         with open(output_filename, "w", encoding="utf-8") as f:
             json.dump(master_schedule, f, indent=4, ensure_ascii=False)
-        print(f"\nFinal workflow success: All available data consolidated into '{output_filename}'.")
+        print(f"\nFinal workflow success: All data consolidated cleanly into '{output_filename}'.")
     except IOError as e:
         print(f"Error writing output file: {e}")
         sys.exit(1)
