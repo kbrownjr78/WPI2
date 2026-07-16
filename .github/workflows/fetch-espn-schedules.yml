@@ -47,12 +47,19 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@://github.com"
-          git add data/*.json
           
-          # Only commit if changes actually exist to avoid workflow errors
-          if git diff --staged --quiet; then
-            echo "No changes in schedules detected."
+          # Check if the data folder exists and contains files
+          if [ -d "data" ] && [ "$(ls -A data)" ]; then
+            git add data/*.json
+            
+            # Only commit if actual modifications exist
+            if git diff --staged --quiet; then
+              echo "No changes in schedules detected."
+            else
+              git commit -m "Automated Sync: Updated ESPN sports schedules [skip ci]"
+              git push
+            fi
           else
-            git commit -m "Automated Sync: Updated ESPN sports schedules [skip ci]"
-            git push
+            echo "Data directory is empty. Nothing to commit."
           fi
+
