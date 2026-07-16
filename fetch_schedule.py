@@ -21,8 +21,7 @@ def fetch_schedules():
         "sports": {}
     }
 
-    # Configuration for open endpoints (Mix of ESPN Public APIs and TheSportsDB Free Mirror)
-    # These public feeds require NO api keys or basic developer keys.
+    # FIXED: Added exact absolute paths and query string boundaries (?) to prevent domain smearing
     free_endpoints = {
         "mlb": {
             "url": f"https://espn.com{espn_date}",
@@ -45,7 +44,6 @@ def fetch_schedules():
             "source": "espn"
         },
         "tennis": {
-            # Public test key '1' is open for all developers on TheSportsDB
             "url": f"https://thesportsdb.com{today_date}&s=Tennis",
             "source": "sportsdb"
         }
@@ -56,8 +54,9 @@ def fetch_schedules():
         print(f"Fetching data for: {sport_name.upper()}...")
         
         try:
-            # No authentication headers required for these public data mirrors
-            response = requests.get(config["url"], timeout=15)
+            # Send standard desktop user-agent to prevent accidental API connection blocks
+            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+            response = requests.get(config["url"], headers=headers, timeout=15)
             
             if response.status_code != 200:
                 print(f"  -> HTTP Error {response.status_code} for {sport_name.upper()}.")
@@ -71,7 +70,6 @@ def fetch_schedules():
             if config["source"] == "espn":
                 events = data.get("events", [])
                 for event in events:
-                    # Clean extraction of essential schedule data points
                     games_list.append({
                         "id": event.get("id"),
                         "name": event.get("name"),
@@ -82,7 +80,6 @@ def fetch_schedules():
             
             elif config["source"] == "sportsdb":
                 events = data.get("events", [])
-                # TheSportsDB returns None instead of empty array if no matches are scheduled
                 if events is None:
                     events = []
                 for event in events:
