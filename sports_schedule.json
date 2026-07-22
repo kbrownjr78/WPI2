@@ -1,6 +1,6 @@
 {
-    "date": "2026-07-21",
-    "pulled_at": "2026-07-21T12:09:55.262594Z",
+    "date": "2026-07-22",
+    "pulled_at": "2026-07-22T12:14:02.083624Z",
     "sports": {
         "mlb": {
             "results_count": 1,
@@ -9,9 +9,9 @@
                     "game_id": "mlb_1001",
                     "matchup": "New York Mets @ Philadelphia Phillies",
                     "monte_carlo_engine": {
-                        "simulated_home_probability": 0.056,
-                        "simulated_away_probability": 0.944,
-                        "best_bet": "AWAY (-110 / Moneyline) (+EV 80.3%)"
+                        "simulated_home_probability": 0.051,
+                        "simulated_away_probability": 0.949,
+                        "best_bet": "AWAY (-110 / Moneyline) (+EV 81.26%)"
                     }
                 }
             ]
@@ -27,27 +27,27 @@
                     "game_id": "wnba_2001",
                     "matchup": "New York Liberty @ Dallas Wings",
                     "monte_carlo_engine": {
-                        "simulated_home_probability": 0.055,
-                        "simulated_away_probability": 0.945,
-                        "best_bet": "AWAY (-110 / Spread) (+EV 80.49%)"
+                        "simulated_home_probability": 0.057,
+                        "simulated_away_probability": 0.943,
+                        "best_bet": "AWAY (-110 / Spread) (+EV 80.11%)"
                     }
                 },
                 {
                     "game_id": "wnba_2002",
                     "matchup": "Portland Fire @ Washington Mystics",
                     "monte_carlo_engine": {
-                        "simulated_home_probability": 0.053,
-                        "simulated_away_probability": 0.947,
-                        "best_bet": "AWAY (-110 / Spread) (+EV 80.88%)"
+                        "simulated_home_probability": 0.056,
+                        "simulated_away_probability": 0.944,
+                        "best_bet": "AWAY (-110 / Spread) (+EV 80.3%)"
                     }
                 },
                 {
                     "game_id": "wnba_2003",
                     "matchup": "Golden State Valkyries @ Indiana Fever",
                     "monte_carlo_engine": {
-                        "simulated_home_probability": 0.071,
-                        "simulated_away_probability": 0.929,
-                        "best_bet": "AWAY (-110 / Spread) (+EV 77.44%)"
+                        "simulated_home_probability": 0.055,
+                        "simulated_away_probability": 0.945,
+                        "best_bet": "AWAY (-110 / Spread) (+EV 80.49%)"
                     }
                 }
             ]
@@ -59,36 +59,36 @@
                     "game_id": "soc_3001",
                     "matchup": "CF Montréal vs Toronto FC",
                     "monte_carlo_engine": {
-                        "simulated_home_probability": 0.054,
-                        "simulated_away_probability": 0.946,
-                        "best_bet": "AWAY (-110 / Moneyline) (+EV 80.69%)"
+                        "simulated_home_probability": 0.047,
+                        "simulated_away_probability": 0.953,
+                        "best_bet": "AWAY (-110 / Moneyline) (+EV 82.02%)"
                     }
                 },
                 {
                     "game_id": "soc_3002",
                     "matchup": "Chicago Fire vs Vancouver Whitecaps",
                     "monte_carlo_engine": {
-                        "simulated_home_probability": 0.056,
-                        "simulated_away_probability": 0.944,
-                        "best_bet": "AWAY (-110 / Moneyline) (+EV 80.3%)"
+                        "simulated_home_probability": 0.052,
+                        "simulated_away_probability": 0.948,
+                        "best_bet": "AWAY (-110 / Moneyline) (+EV 81.07%)"
                     }
                 },
                 {
                     "game_id": "soc_3003",
                     "matchup": "St. Louis City SC vs Sporting Kansas City",
                     "monte_carlo_engine": {
-                        "simulated_home_probability": 0.039,
-                        "simulated_away_probability": 0.961,
-                        "best_bet": "AWAY (-110 / Moneyline) (+EV 83.55%)"
+                        "simulated_home_probability": 0.052,
+                        "simulated_away_probability": 0.948,
+                        "best_bet": "AWAY (-110 / Moneyline) (+EV 81.07%)"
                     }
                 },
                 {
                     "game_id": "soc_3004",
                     "matchup": "Seattle Sounders vs Portland Timbers",
                     "monte_carlo_engine": {
-                        "simulated_home_probability": 0.054,
-                        "simulated_away_probability": 0.946,
-                        "best_bet": "AWAY (-110 / Moneyline) (+EV 80.69%)"
+                        "simulated_home_probability": 0.066,
+                        "simulated_away_probability": 0.934,
+                        "best_bet": "AWAY (-110 / Moneyline) (+EV 78.39%)"
                     }
                 }
             ]
@@ -100,18 +100,18 @@
                     "game_id": "ten_4001",
                     "matchup": "Stefanos Tsitsipas @ Jerome Kym",
                     "monte_carlo_engine": {
-                        "simulated_home_probability": 0.05,
-                        "simulated_away_probability": 0.95,
-                        "best_bet": "AWAY (-110 / Match Odds) (+EV 81.45%)"
+                        "simulated_home_probability": 0.077,
+                        "simulated_away_probability": 0.923,
+                        "best_bet": "AWAY (-110 / Match Odds) (+EV 76.29%)"
                     }
                 },
                 {
                     "game_id": "ten_4002",
                     "matchup": "Quentin Halys @ Alexander Bublik",
                     "monte_carlo_engine": {
-                        "simulated_home_probability": 0.048,
-                        "simulated_away_probability": 0.952,
-                        "best_bet": "AWAY (-110 / Match Odds) (+EV 81.83%)"
+                        "simulated_home_probability": 0.061,
+                        "simulated_away_probability": 0.939,
+                        "best_bet": "AWAY (-110 / Match Odds) (+EV 79.35%)"
                     }
                 }
             ]
